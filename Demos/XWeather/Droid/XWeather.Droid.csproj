@@ -370,7 +370,7 @@
   <ItemGroup>
     <AndroidEnvironment Include="environment.txt" />
   </ItemGroup>
-  <Import Project="..\..\..\NomadCode.Azure\NomadCode.Azure\NomadCode.Azure.projitems" Label="Shared" Condition="Exists('..\..\..\NomadCode.Azure\NomadCode.Azure\NomadCode.Azure.projitems')" />
+  <Import Project="..\..\NomadCode.Azure\NomadCode.Azure\NomadCode.Azure.projitems" Label="Shared" Condition="Exists('..\..\NomadCode.Azure\NomadCode.Azure\NomadCode.Azure.projitems')" />
   <Import Project="..\Shared\XWeather.Shared.projitems" Label="Shared" Condition="Exists('..\Shared\XWeather.Shared.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />
