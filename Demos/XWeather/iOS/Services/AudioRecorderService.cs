@@ -30,7 +30,8 @@ namespace XWeather.WeatherBot
 
 			InitializeStream ();
 
-			if (!recorder.StartRecorder (audioStream, GetFilename ())) {
+			if (!recorder.StartRecorder (audioStream, GetFilename ()))
+			{
 				throw new Exception ("AudioStream failed to start: busy?");
 			}
 		}
@@ -46,14 +47,19 @@ namespace XWeather.WeatherBot
 			{
 				audioDetected = true;
 				silenceTime = null;
-			} else //no audio detected
-			  {
+			}
+			else //no audio detected
+			{
 				//see if we've detected 'near' silence for more than <audioTimeout>
-				if (endOnSilence && silenceTime.HasValue) {
-					if (DateTime.Now.Subtract (silenceTime.Value) > audioTimeout) {
+				if (endOnSilence && silenceTime.HasValue)
+				{
+					if (DateTime.Now.Subtract (silenceTime.Value) > audioTimeout)
+					{
 						StopRecording ();
 					}
-				} else {
+				}
+				else
+				{
 					silenceTime = DateTime.Now;
 				}
 			}
@@ -70,31 +76,42 @@ namespace XWeather.WeatherBot
 			//bool signed = (RECORDER_AUDIO_ENCODING == Android.Media.Encoding. AudioFormat. Encoding.PCM_SIGNED);
 			bool bigEndian = false;// (format.isBigEndian());
 
-			if (use16Bit) {
-				for (int i = readPoint; i < buffer.Length - leftOver; i += 2) {
+			if (use16Bit)
+			{
+				for (int i = readPoint; i < buffer.Length - leftOver; i += 2)
+				{
 					int value = 0;
 					// deal with endianness
 					int hiByte = (bigEndian ? buffer [i] : buffer [i + 1]);
 					int loByte = (bigEndian ? buffer [i + 1] : buffer [i]);
 
-					if (signed) {
+					if (signed)
+					{
 						short shortVal = (short)hiByte;
 						shortVal = (short)((shortVal << 8) | (byte)loByte);
 						value = shortVal;
-					} else {
+					}
+					else
+					{
 						value = (hiByte << 8) | loByte;
 					}
 
 					max = Math.Max (max, value);
 				} // for
-			} else {
+			}
+			else
+			{
 				// 8 bit - no endianness issues, just sign
-				for (int i = readPoint; i < buffer.Length - leftOver; i++) {
+				for (int i = readPoint; i < buffer.Length - leftOver; i++)
+				{
 					int value = 0;
 
-					if (signed) {
+					if (signed)
+					{
 						value = buffer [i];
-					} else {
+					}
+					else
+					{
 						short shortVal = 0;
 						shortVal = (short)(shortVal | buffer [i]);
 						value = shortVal;
@@ -105,9 +122,12 @@ namespace XWeather.WeatherBot
 			} // 8 bit
 			  // express max as float of 0.0 to 1.0 of max value
 			  // of 8 or 16 bits (signed or unsigned)
-			if (signed) {
+			if (signed)
+			{
 				if (use16Bit) { level = (float)max / MAX_16_BITS_SIGNED; } else { level = (float)max / MAX_8_BITS_SIGNED; }
-			} else {
+			}
+			else
+			{
 				if (use16Bit) { level = (float)max / MAX_16_BITS_UNSIGNED; } else { level = (float)max / MAX_8_BITS_UNSIGNED; }
 			}
 
@@ -119,17 +139,16 @@ namespace XWeather.WeatherBot
 
 		public void StopRecording ()
 		{
-			if (audioStream == null)
-				throw new Exception ("You must first start recording.");
-
-			if (audioStream.Active) {
-				try {
-
+			if (audioStream?.Active ?? false)
+			{
+				try
+				{
 					audioStream.OnBroadcast -= AudioStream_OnBroadcast;
 					recorder.StopRecorder ();
 					audioStream.Stop ();
-
-				} catch (Exception ex) {
+				}
+				catch (Exception ex)
+				{
 					System.Diagnostics.Debug.WriteLine (ex.Message);
 				}
 
@@ -140,20 +159,26 @@ namespace XWeather.WeatherBot
 
 		void InitializeStream ()
 		{
-			try {
-				if (audioStream == null) {
+			try
+			{
+				if (audioStream == null)
+				{
 					audioStream = new AudioStream (44100, 640);
 				}
 
-				if (endOnSilence) {
+				if (endOnSilence)
+				{
 					audioStream.OnBroadcast -= AudioStream_OnBroadcast;
 					audioStream.OnBroadcast += AudioStream_OnBroadcast;
 				}
 
-				if (recorder == null) {
+				if (recorder == null)
+				{
 					recorder = new WaveRecorder ();
 				}
-			} catch (Exception ex) {
+			}
+			catch (Exception ex)
+			{
 				System.Diagnostics.Debug.WriteLine ("Error: {0}", ex);
 			}
 		}
