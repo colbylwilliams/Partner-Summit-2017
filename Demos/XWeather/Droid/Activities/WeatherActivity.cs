@@ -246,7 +246,7 @@ namespace XWeather.Droid
 		}
 
 
-#if !DEBUG
+#if DEBUG
 
 		void getData () => Task.Run (async () =>
 		{

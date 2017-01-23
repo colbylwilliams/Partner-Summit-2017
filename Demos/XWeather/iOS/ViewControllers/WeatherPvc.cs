@@ -233,7 +233,7 @@ namespace XWeather.iOS
 			return Pages.Unknown;
 		}
 
-#if !DEBUG
+#if DEBUG
 
 		void getData () => Task.Run (async () =>
 		{
