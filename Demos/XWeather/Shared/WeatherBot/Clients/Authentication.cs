@@ -36,24 +36,24 @@ namespace XWeather.WeatherBot
 		{
 			if (string.IsNullOrEmpty (jwtAuthToken))
 			{
-				this.jwtAuthToken = HttpPost (AccessUri);
+				jwtAuthToken = HttpPost (AccessUri);
 			}
 		}
 
 
 		public string GetAccessToken ()
 		{
-			return this.jwtAuthToken;
+			return jwtAuthToken;
 		}
 
 
 		void RenewAccessToken ()
 		{
-			this.jwtAuthToken = HttpPost (AccessUri);
+			jwtAuthToken = HttpPost (AccessUri);
 
 			Debug.WriteLine (string.Format ("Renewed token for user: {0} is: {1}",
-											this.subscriptionId,
-											this.jwtAuthToken));
+											subscriptionId,
+											jwtAuthToken));
 		}
 
 
@@ -83,22 +83,30 @@ namespace XWeather.WeatherBot
 
 		string HttpPost (string accessUri)
 		{
-			//Prepare auth request 
-			var webRequest = WebRequest.Create (accessUri);
-			webRequest.ContentType = "application/x-www-form-urlencoded";
-			webRequest.Method = "POST";
-			webRequest.ContentLength = 0;
-
-			webRequest.Headers.Add ("Ocp-Apim-Subscription-Key", this.subscriptionId);
-
-			using (WebResponse webResponse = webRequest.GetResponse ())
-			using (Stream stream = webResponse.GetResponseStream ())
+			try
 			{
-				var reader = new StreamReader (stream, Encoding.UTF8);
-				this.jwtAuthToken = reader.ReadToEnd ();
-			}
+				//Prepare auth request 
+				var webRequest = WebRequest.Create (accessUri);
+				webRequest.ContentType = "application/x-www-form-urlencoded";
+				webRequest.Method = "POST";
+				webRequest.ContentLength = 0;
 
-			return this.jwtAuthToken;
+				webRequest.Headers.Add ("Ocp-Apim-Subscription-Key", subscriptionId);
+
+				using (WebResponse webResponse = webRequest.GetResponse ())
+				using (Stream stream = webResponse.GetResponseStream ())
+				{
+					var reader = new StreamReader (stream, Encoding.UTF8);
+					jwtAuthToken = reader.ReadToEnd ();
+				}
+
+				return jwtAuthToken;
+			}
+			catch (Exception ex)
+			{
+				Debug.WriteLine ("Error during auth post: {0}", ex.Message);
+				throw;
+			}
 		}
 	}
 }

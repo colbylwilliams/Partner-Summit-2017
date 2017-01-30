@@ -40,6 +40,9 @@ namespace XWeather.WeatherBot
 		//}
 
 
+		/// <summary>
+		/// Listens for command.
+		/// </summary>
 		public void ListenForCommand ()
 		{
 			StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Listening));
@@ -68,20 +71,34 @@ namespace XWeather.WeatherBot
 			{
 				StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Working, WeatherBotMessages.ParsingFeedbackMsg));
 
-				//UserDialogs.Instance.ShowLoading("Converting Speech to Text");
-				var speechToText = await speechApi.SpeechToTextAsync (audioFilePath);
+				SpeechResult speechToTextResult = null;
 
-				if (!string.IsNullOrEmpty (speechToText?.Name) && speechToText.Confidence > SpeechConfidenceThreshold)
+				try
 				{
+					speechToTextResult = await speechApi.SpeechToTextAsync (audioFilePath);
+				}
+				catch (Exception ex)
+				{
+					System.Diagnostics.Debug.WriteLine ("Error talking to Bing Speech API: {0}", ex.Message);
+				}
 
-					StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Working, speechToText?.Name));
+				if (!string.IsNullOrEmpty (speechToTextResult?.Name) && speechToTextResult.Confidence > SpeechConfidenceThreshold)
+				{
+					StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Working, speechToTextResult?.Name));
 
-					var luisResult = await luis.GetEntityFromLUIS (speechToText.Name);
-
-					if (luisResult?.intents != null)
+					try
 					{
-						processIntent (luisResult);
-						return;
+						var luisResult = await luis.GetEntityFromLUIS (speechToTextResult.Name);
+
+						if (luisResult?.intents != null)
+						{
+							processIntent (luisResult);
+							return;
+						}
+					}
+					catch (Exception ex)
+					{
+						System.Diagnostics.Debug.WriteLine ("Error talking to LUIS: {0}", ex.Message);
 					}
 				}
 			}
