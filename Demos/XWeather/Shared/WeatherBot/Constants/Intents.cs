@@ -1,7 +1,13 @@
 ﻿namespace XWeather.WeatherBot
 {
-	public static class Intents
+	public static partial class Constants
 	{
-		public const string CheckWeatherIntent = "builtin.intent.weather.check_weather";
+		public static partial class LUIS
+		{
+			public static class Intents
+			{
+				public const string CheckWeather = "builtin.intent.weather.check_weather";
+			}
+		}
 	}
 }

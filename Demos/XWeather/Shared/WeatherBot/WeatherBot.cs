@@ -69,7 +69,7 @@ namespace XWeather.WeatherBot
 			//see if we have a valid audio file - this will return null in the case only silence was recorded
 			if (audioFilePath != null)
 			{
-				StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Working, WeatherBotMessages.ParsingFeedbackMsg));
+				StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Working, Constants.Messages.ParsingFeedbackMsg));
 
 				SpeechResult speechToTextResult = null;
 
@@ -104,7 +104,7 @@ namespace XWeather.WeatherBot
 			}
 
 			//if we make it here we've failed :(
-			StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Failure, WeatherBotMessages.NotUnderstoodResponse));
+			StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Failure, Constants.Messages.NotUnderstoodResponse));
 		}
 
 
@@ -133,7 +133,7 @@ namespace XWeather.WeatherBot
 
 			switch (intent?.intent)
 			{
-				case Intents.CheckWeatherIntent:
+				case Constants.LUIS.Intents.CheckWeather:
 
 					processCheckWeatherIntent (result.entities);
 
@@ -154,12 +154,12 @@ namespace XWeather.WeatherBot
 			{
 				switch (locationEntity.type)
 				{
-					case LocationEntityConstants.AbsoluteLocationEntity:
+					case Constants.LUIS.Entities.Location.Absolute:
 
 						processWeatherRequest (locationEntity, timeEntity);
 						return;
 
-					case LocationEntityConstants.ImplicitLocationEntity:
+					case Constants.LUIS.Entities.Location.Implicit:
 
 						if (locationEntity.IsCurrentLocation ())
 						{
@@ -174,7 +174,7 @@ namespace XWeather.WeatherBot
 
 			//correct check weather intent, but no location provided?  We assume they want the weather here
 			//	e.g. "What's the weather here" can result in no entities
-			processWeatherRequest (LocationEntityConstants.CurrentLocationEntity, timeEntity);
+			processWeatherRequest (Constants.LUIS.Entities.Location.Current, timeEntity);
 		}
 
 
@@ -184,12 +184,12 @@ namespace XWeather.WeatherBot
 
 			switch (timeEntity?.type)
 			{
-				case TimeEntityConstants.TimeRangeEntity:
+				case Constants.LUIS.Entities.DateTime.TimeRange:
 				case null:
 
-					if (timeEntity?.resolution == null || timeEntity.resolution.time == TimeEntityConstants.CurrentTime)
+					if (timeEntity?.resolution == null || timeEntity.resolution.time == Constants.LUIS.Entities.DateTime.Current)
 					{
-						response = string.Format (WeatherBotMessages.CheckWeatherResponseTemplate, locationEntity.entity);
+						response = string.Format (Constants.Messages.CheckWeatherResponseTemplate, locationEntity.entity);
 
 						processSuccessfulRequest (response, locationEntity);
 					}
@@ -200,13 +200,13 @@ namespace XWeather.WeatherBot
 						//time-based request (not date), but possibly in the future?
 						if (DateTime.TryParse (timeEntity.resolution.time, out dateTime))
 						{
-							response = string.Format (WeatherBotMessages.CheckFutureWeatherForecastResponseTemplate, locationEntity.entity, timeEntity.entity);
+							response = string.Format (Constants.Messages.CheckFutureWeatherForecastResponseTemplate, locationEntity.entity, timeEntity.entity);
 
 							processSuccessfulRequest (response, locationEntity, dateTime);
 						}
 						else //couldn't figure out the date
 						{
-							response = string.Format (WeatherBotMessages.CheckWeatherResponseTemplate, locationEntity.entity);
+							response = string.Format (Constants.Messages.CheckWeatherResponseTemplate, locationEntity.entity);
 
 							processSuccessfulRequest (response, locationEntity);
 						}
@@ -214,12 +214,12 @@ namespace XWeather.WeatherBot
 					else
 					{
 						//correct check weather intent, but no valid/understood date/time entity provided?
-						processErrorResponse (WeatherBotMessages.NotUnderstoodResponse);
+						processErrorResponse (Constants.Messages.NotUnderstoodResponse);
 					}
 
 					break;
 
-				case TimeEntityConstants.DateRangeEntity:
+				case Constants.LUIS.Entities.DateTime.DateRange:
 
 					if (timeEntity.resolution?.date != null)
 					{
@@ -230,31 +230,31 @@ namespace XWeather.WeatherBot
 						if (DateTime.TryParse (timeEntity.entity, out date))
 						{
 							var dateResponse = date.ToLongDateString ();
-							response = string.Format (WeatherBotMessages.CheckFutureWeatherForecastResponseTemplate, locationEntity.entity, dateResponse);
+							response = string.Format (Constants.Messages.CheckFutureWeatherForecastResponseTemplate, locationEntity.entity, dateResponse);
 
 							processSuccessfulRequest (response, locationEntity, date);
 						}
 						else //entity is not a date... this should work for queries like "tomorrow," "in 3 days," etc.
 						{
 							date = timeEntity.resolution.date.Value;
-							response = string.Format (WeatherBotMessages.CheckFutureWeatherForecastResponseTemplate, locationEntity.entity, timeEntity.entity);
+							response = string.Format (Constants.Messages.CheckFutureWeatherForecastResponseTemplate, locationEntity.entity, timeEntity.entity);
 
 							processSuccessfulRequest (response, locationEntity, date);
 						}
 					}
-					else if (timeEntity.resolution?.resolution_type == TimeEntityConstants.DurationResolution)
+					else if (timeEntity.resolution?.resolution_type == Constants.LUIS.Entities.DateTime.DurationResolution)
 					{
 						//TODO: figure out how to handle these on the weather side of things
 
 						//date range forecast with no specific date, e.g. "5 day".. this comes thru as a "duration" resolution
-						response = string.Format (WeatherBotMessages.CheckWeatherForecastResponseTemplate, locationEntity.entity);
+						response = string.Format (Constants.Messages.CheckWeatherForecastResponseTemplate, locationEntity.entity);
 
 						processSuccessfulRequest (response);
 					}
 					else
 					{
 						//correct check weather intent, but no valid/understood date/time entity provided?
-						processErrorResponse (WeatherBotMessages.NotUnderstoodResponse);
+						processErrorResponse (Constants.Messages.NotUnderstoodResponse);
 					}
 
 					break;
@@ -278,14 +278,14 @@ namespace XWeather.WeatherBot
 		{
 			failureCount++;
 			var entity = result.entities.FindBestEntityByScore ();
-			var response = failureCount < failureThreshold ? WeatherBotMessages.NotUnderstoodResponse : WeatherBotMessages.IrritatedResponseTemplate;
+			var response = failureCount < failureThreshold ? Constants.Messages.NotUnderstoodResponse : Constants.Messages.IrritatedResponseTemplate;
 
 			if (failureCount < 3)
 			{
 				if (entity != null)
 				{
 					var entityWords = entity.resolution?.value != null ? entity.resolution.value : entity.entity;
-					response = string.Format (WeatherBotMessages.NotUnderstoodResponseTemplate, entityWords);
+					response = string.Format (Constants.Messages.NotUnderstoodResponseTemplate, entityWords);
 				}
 			}
 

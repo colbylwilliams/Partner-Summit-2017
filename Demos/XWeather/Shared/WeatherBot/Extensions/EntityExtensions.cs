@@ -6,7 +6,7 @@ namespace XWeather.WeatherBot
 	{
 		public static bool IsCurrentLocation (this Entity locationEntity)
 		{
-			return locationEntity.entity == LocationEntityConstants.CurrentLocation && locationEntity.type == LocationEntityConstants.ImplicitLocationEntity;
+			return locationEntity.entity == Constants.LUIS.Entities.Location.CurrentKey && locationEntity.type == Constants.LUIS.Entities.Location.Implicit;
 		}
 
 
@@ -18,12 +18,12 @@ namespace XWeather.WeatherBot
 			}
 
 			//AbsoluteLocationEntity
-			var locationEntity = entities.Where (e => e.type == LocationEntityConstants.AbsoluteLocationEntity).OrderByDescending (e => e.score).FirstOrDefault ();
+			var locationEntity = entities.Where (e => e.type == Constants.LUIS.Entities.Location.Absolute).OrderByDescending (e => e.score).FirstOrDefault ();
 
 			//ImplicitLocationEntity
 			if (locationEntity == null)
 			{
-				locationEntity = entities.Where (e => e.type == LocationEntityConstants.ImplicitLocationEntity).OrderByDescending (e => e.score).FirstOrDefault ();
+				locationEntity = entities.Where (e => e.type == Constants.LUIS.Entities.Location.Implicit).OrderByDescending (e => e.score).FirstOrDefault ();
 			}
 
 			return locationEntity;
@@ -55,11 +55,11 @@ namespace XWeather.WeatherBot
 			if (entities.Length > 1)
 			{
 				//TimeRangeEntity
-				var entity = entities.Where (e => e.type == TimeEntityConstants.TimeRangeEntity).OrderByDescending (e => e.score).FirstOrDefault ();
+				var entity = entities.Where (e => e.type == Constants.LUIS.Entities.DateTime.TimeRange).OrderByDescending (e => e.score).FirstOrDefault ();
 
 				if (entity == null)
 				{ //DateRangeEntity
-					entity = entities.Where (e => e.type == TimeEntityConstants.DateRangeEntity).OrderByDescending (e => e.score).FirstOrDefault ();
+					entity = entities.Where (e => e.type == Constants.LUIS.Entities.DateTime.DateRange).OrderByDescending (e => e.score).FirstOrDefault ();
 				}
 
 				return entity;

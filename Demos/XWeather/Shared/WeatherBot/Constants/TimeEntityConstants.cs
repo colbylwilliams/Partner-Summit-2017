@@ -1,11 +1,22 @@
 ﻿namespace XWeather.WeatherBot
 {
-	public static class TimeEntityConstants
+	public static partial class Constants
 	{
-		public const string CurrentTime = "PRESENT_REF";
+		public static partial class LUIS
+		{
+			public static partial class Entities
+			{
+				public static class DateTime
+				{
+					public const string Current = "PRESENT_REF";
 
-		public const string TimeRangeEntity = "builtin.weather.time_range";
-		public const string DateRangeEntity = "builtin.weather.date_range";
-		public const string DurationResolution = "builtin.datetime.duration";
+					public const string TimeRange = "builtin.weather.time_range";
+
+					public const string DateRange = "builtin.weather.date_range";
+
+					public const string DurationResolution = "builtin.datetime.duration";
+				}
+			}
+		}
 	}
 }

@@ -1,17 +1,26 @@
 ﻿namespace XWeather.WeatherBot
 {
-	public static class LocationEntityConstants
+	public static partial class Constants
 	{
-		public const string AbsoluteLocationEntity = "builtin.weather.absolute_location";
-		public const string ImplicitLocationEntity = "builtin.weather.implicit_location";
-
-		public const string CurrentLocation = "here";
-
-		public static Entity CurrentLocationEntity =
-			new Entity
+		public static partial class LUIS
+		{
+			public static partial class Entities
 			{
-				type = ImplicitLocationEntity,
-				entity = CurrentLocation
-			};
+				public static class Location
+				{
+					public const string Absolute = "builtin.weather.absolute_location";
+					public const string Implicit = "builtin.weather.implicit_location";
+
+					public const string CurrentKey = "here";
+
+					public static Entity Current =
+						new Entity
+						{
+							type = Implicit,
+							entity = CurrentKey
+						};
+				}
+			}
+		}
 	}
 }
