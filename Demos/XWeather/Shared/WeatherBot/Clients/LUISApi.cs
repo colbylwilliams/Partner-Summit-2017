@@ -8,8 +8,6 @@ namespace XWeather.WeatherBot
 {
 	public class LUISApi
 	{
-		const string baseUrl = "https://api.projectoxford.ai/luis/v2.0/apps/";
-
 		readonly string appId;
 		readonly string subscriptionId;
 
@@ -22,7 +20,7 @@ namespace XWeather.WeatherBot
 
 #if TEST_DATA
 
-		public async Task<LUISResult> GetEntityFromLUIS (string query)
+		public async Task<LUISResult> GetResultForQuery (string query)
 		{
 			query = Uri.EscapeDataString (query);
 			var personalFolder = Environment.GetFolderPath (Environment.SpecialFolder.Personal);
@@ -42,14 +40,14 @@ namespace XWeather.WeatherBot
 
 #else
 
-		public async Task<LUISResult> GetEntityFromLUIS (string query)
+		public async Task<LUISResult> GetResultForQuery (string query)
 		{
 			query = Uri.EscapeDataString (query);
 			LUISResult result = null;
 
 			using (HttpClient client = new HttpClient ())
 			{
-				string requestUri = $"{baseUrl}{appId}?subscription-key={subscriptionId}&q={query}";
+				string requestUri = $"{Constants.Endpoints.LUISApi}{appId}?subscription-key={subscriptionId}&q={query}";
 				var response = await client.GetStringAsync (requestUri);
 
 				//write test/offline data

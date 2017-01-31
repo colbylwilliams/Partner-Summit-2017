@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Net;
 using Newtonsoft.Json;
 using System.Diagnostics;
+using System.Text;
 
 namespace XWeather.WeatherBot
 {
@@ -22,17 +23,16 @@ namespace XWeather.WeatherBot
 		HttpWebRequest createWebRequest (string audioFilePath)
 		{
 			string headerValue;
-			string requestUri = "https://speech.platform.bing.com/recognize";
+			StringBuilder requestUriBuilder = new StringBuilder (Constants.Endpoints.BingSpeechApi);
 
-			/* URI Params. Refer to the README file for more information. */
-			requestUri += @"?scenarios=smd";                                  // websearch is the other main option.
-			requestUri += @"&appid=D4D52672-91D7-4C74-8AD8-42B1D98141A5";     // You must use this ID.
-			requestUri += @"&locale=en-US";                                   // We support several other languages.  Refer to README file.
-			requestUri += @"&device.os=wp7";
-			requestUri += @"&version=3.0";
-			requestUri += @"&format=json";
-			requestUri += @"&instanceid=565D69FF-E928-4B7E-87DA-9A750B96D9E3";
-			requestUri += @"&requestid=" + Guid.NewGuid ().ToString ();
+			requestUriBuilder.Append (@"?scenarios=smd");                               // websearch is the other main option.
+			requestUriBuilder.Append (@"&appid=D4D52672-91D7-4C74-8AD8-42B1D98141A5");  // You must use this ID.
+			requestUriBuilder.Append (@"&locale=en-US");                                // We support several other languages.  Refer to README file.
+			requestUriBuilder.Append (@"&device.os=wp7");
+			requestUriBuilder.Append (@"&version=3.0");
+			requestUriBuilder.Append (@"&format=json");
+			requestUriBuilder.Append (@"&instanceid=565D69FF-E928-4B7E-87DA-9A750B96D9E3");
+			requestUriBuilder.AppendFormat (@"&requestid={0}", Guid.NewGuid ());
 
 			string host = @"speech.platform.bing.com";
 			string contentType = @"audio/wav; codec=""audio/pcm""; samplerate=16000";
@@ -47,6 +47,7 @@ namespace XWeather.WeatherBot
 			 * Create a header with the access_token property of the returned token
 			 */
 			headerValue = "Bearer " + auth.Token;
+			var requestUri = requestUriBuilder.ToString ();
 
 			Debug.WriteLine ("Request Uri: " + requestUri + Environment.NewLine);
 

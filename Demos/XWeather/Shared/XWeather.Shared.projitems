@@ -78,6 +78,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Enums\WeatherBotState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Extensions\EntityExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Extensions\ExceptionExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Constants\Endpoints.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Settings\" />

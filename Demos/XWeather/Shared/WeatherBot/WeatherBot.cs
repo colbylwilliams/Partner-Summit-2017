@@ -88,7 +88,7 @@ namespace XWeather.WeatherBot
 
 					try
 					{
-						var luisResult = await luis.GetEntityFromLUIS (speechToTextResult.Name);
+						var luisResult = await luis.GetResultForQuery (speechToTextResult.Name);
 
 						if (luisResult?.intents != null)
 						{

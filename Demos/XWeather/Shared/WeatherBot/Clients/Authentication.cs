@@ -8,8 +8,6 @@ namespace XWeather.WeatherBot
 {
 	public class Authentication
 	{
-		public static readonly string AccessUri = "https://api.cognitive.microsoft.com/sts/v1.0/issueToken";
-
 		readonly string subscriptionId;
 
 		public string Token { get; private set; }
@@ -25,7 +23,7 @@ namespace XWeather.WeatherBot
 		{
 			if (string.IsNullOrEmpty (Token))
 			{
-				Token = HttpPost (AccessUri);
+				Token = HttpPost (Constants.Endpoints.AuthApi);
 			}
 		}
 
@@ -33,7 +31,7 @@ namespace XWeather.WeatherBot
 		public void RenewAccessToken ()
 		{
 			Token = null;
-			Token = HttpPost (AccessUri);
+			Token = HttpPost (Constants.Endpoints.AuthApi);
 
 			Debug.WriteLine (string.Format ("Renewed token for user: {0} is: {1}",
 											subscriptionId,
