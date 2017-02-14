@@ -136,7 +136,9 @@ namespace XWeather.WeatherBot
 			return level;
 		}
 
-
+		/// <summary>
+		/// Stops the recording.
+		/// </summary>
 		public void StopRecording ()
 		{
 			if (audioStream?.Active ?? false)

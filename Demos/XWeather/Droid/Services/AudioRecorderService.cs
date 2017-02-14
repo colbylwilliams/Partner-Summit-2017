@@ -129,7 +129,9 @@ namespace XWeather.WeatherBot
 			}
 		}
 
-
+		/// <summary>
+		/// Stops the recording.
+		/// </summary>
 		public void StopRecording ()
 		{
 			if (recorder != null)
