@@ -31,11 +31,11 @@ namespace XWeather.Droid
 
 			var button = child as FloatingActionButton;
 
-			if (dyConsumed > 0 && button.Visibility == ViewStates.Visible) {
+			if (dyConsumed > 0 && (button.Visibility == ViewStates.Visible || button.Alpha > 0)) {
 
 				button.Hide ();
 
-			} else if (dyConsumed < 0 && button.Visibility != ViewStates.Visible) {
+			} else if (dyConsumed < 0 && (button.Visibility != ViewStates.Visible || button.Alpha < 0.01)) {
 
 				button.Show ();
 			}

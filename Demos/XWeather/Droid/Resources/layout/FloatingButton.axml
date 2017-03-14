@@ -1,14 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.FloatingActionButton xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/floatingButton"
-    app:fabSize="normal"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="bottom|right"
-    android:layout_margin="16dp"
-    android:clickable="true"
-    android:src="@drawable/i_list"
-    app:layout_anchor="@+id/viewPager"
-    app:layout_anchorGravity="bottom|right|end"
-    app:layout_behavior="xweather.droid.ScrollAwareFABBehavior" />
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabWeatherBot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="160dp"
+        android:layout_gravity="bottom|right"
+        android:layout_marginRight="16dp"
+        android:visibility="invisible"
+        app:elevation="6dp"
+        app:pressedTranslationZ="12dp"
+        android:src="@drawable/i_mic"
+        app:layout_behavior="xweather.droid.ScrollAwareFABBehavior" />
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="90dp"
+        android:layout_gravity="bottom|right"
+        android:layout_marginRight="16dp"
+        android:visibility="invisible"
+        app:elevation="6dp"
+        app:pressedTranslationZ="12dp"
+        android:src="@drawable/i_settings"
+        app:layout_behavior="xweather.droid.ScrollAwareFABBehavior" />
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/floatingButton"
+        app:fabSize="normal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|right"
+        android:layout_margin="16dp"
+        android:clickable="true"
+        android:src="@drawable/i_list"
+        app:layout_anchor="@+id/viewPager"
+        app:layout_anchorGravity="bottom|right|end"
+        app:layout_behavior="xweather.droid.ScrollAwareFABBehavior" />
+</merge>

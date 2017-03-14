@@ -17,6 +17,8 @@ using SettingsStudio;
 using XWeather.Clients;
 using XWeather.Domain;
 using XWeather.Shared;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace XWeather.Droid
 {
@@ -26,12 +28,21 @@ namespace XWeather.Droid
 	public class WeatherActivity : BaseActivity, FloatingActionButton.IOnClickListener
 	{
 		bool analyticsStarted;
+		bool fabExpanded;
 
 		int viewPagerCache;
 
 		ViewPager viewPager;
 
-		FloatingActionButton floatingButton;
+		List<FloatingActionButton> floatingButtons;
+		Dictionary<int, Animation> animations;
+
+		enum FabActions
+		{
+			Main,
+			Settings,
+			WeatherBot
+		}
 
 		WeatherPagerAdapter pagerAdapter;
 
@@ -44,11 +55,15 @@ namespace XWeather.Droid
 
 			SetContentView (Resource.Layout.WeatherActivity);
 
+			animations = this.LoadAnimations (Resource.Animation.fab_rotate_open,
+			                                  Resource.Animation.fab_rotate_close, 
+			                                  Resource.Animation.fab_open, 
+			                                  Resource.Animation.fab_close);
 
-			floatingButton = FindViewById<FloatingActionButton> (Resource.Id.floatingButton);
-
-			floatingButton.SetOnClickListener (this);
-
+			var coordLayout = FindViewById (Resource.Id.coordinatorLayout);
+			floatingButtons = coordLayout.FindSubViewsOfType <FloatingActionButton> ();
+			floatingButtons.Reverse ();
+			floatingButtons.ForAll (v => v.SetOnClickListener (this));
 
 			setupViewPager ();
 
@@ -82,7 +97,46 @@ namespace XWeather.Droid
 		}
 
 
-		public void OnClick (View v) => StartActivity (typeof (LocationsActivity));
+		public void OnClick (View v)
+		{
+			switch ((FabActions)floatingButtons.IndexOf ((FloatingActionButton)v))
+			{
+				case FabActions.Main:
+					if (fabExpanded)
+					{
+						floatingButtons.First ().StartAnimation (animations [Resource.Animation.fab_rotate_close]);
+
+						floatingButtons.Skip (1).ForAll (fab =>
+						 {
+							 fab.StartAnimation (animations [Resource.Animation.fab_close]);
+							 fab.Clickable = false;
+							 fab.Visibility = ViewStates.Invisible;
+						 });
+
+						fabExpanded = false;
+					}
+					else
+					{
+						floatingButtons.First ().StartAnimation (animations [Resource.Animation.fab_rotate_open]);
+
+						floatingButtons.Skip (1).ForAll (fab =>
+						 {
+							 fab.StartAnimation (animations [Resource.Animation.fab_open]);
+							 fab.Visibility = ViewStates.Visible;
+							 fab.Clickable = true;
+						 });
+
+						fabExpanded = true;
+					}
+					break;
+				case FabActions.Settings:
+					StartActivity (typeof (LocationsActivity));
+					break;
+				case FabActions.WeatherBot:
+					//do weatherbot UI here
+					break;
+			}
+		}
 
 
 		protected override void HandleUpdatedSelectedLocation (object sender, EventArgs e)
@@ -131,7 +185,7 @@ namespace XWeather.Droid
 
 				Settings.WeatherPage = e.Position;
 
-				floatingButton?.Show ();
+				floatingButtons.First().Show ();
 
 				updateBackground ();
 			};
