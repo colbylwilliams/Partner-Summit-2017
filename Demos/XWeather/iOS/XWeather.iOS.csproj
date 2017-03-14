@@ -22,8 +22,6 @@
 		<MtouchDebug>true</MtouchDebug>
 		<MtouchFastDev>false</MtouchFastDev>
 		<MtouchProfiling>false</MtouchProfiling>
-		<MtouchUseSGen>true</MtouchUseSGen>
-		<MtouchUseRefCounting>true</MtouchUseRefCounting>
 		<MtouchLink>None</MtouchLink>
 		<MtouchArch>i386, x86_64</MtouchArch>
 		<MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
@@ -51,8 +49,6 @@
 		<ErrorReport>prompt</ErrorReport>
 		<WarningLevel>4</WarningLevel>
 		<CodesignKey>iPhone Distribution</CodesignKey>
-		<MtouchUseSGen>true</MtouchUseSGen>
-		<MtouchUseRefCounting>true</MtouchUseRefCounting>
 		<MtouchFloat32>true</MtouchFloat32>
 		<CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
 		<MtouchLink>SdkOnly</MtouchLink>
@@ -82,8 +78,6 @@
 		<ErrorReport>prompt</ErrorReport>
 		<WarningLevel>4</WarningLevel>
 		<CodesignKey>iPhone Developer</CodesignKey>
-		<MtouchUseSGen>true</MtouchUseSGen>
-		<MtouchUseRefCounting>true</MtouchUseRefCounting>
 		<MtouchLink>None</MtouchLink>
 		<MtouchArch>i386</MtouchArch>
 		<MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
@@ -111,8 +105,6 @@
 		<MtouchDebug>true</MtouchDebug>
 		<MtouchFastDev>false</MtouchFastDev>
 		<MtouchProfiling>false</MtouchProfiling>
-		<MtouchUseSGen>true</MtouchUseSGen>
-		<MtouchUseRefCounting>true</MtouchUseRefCounting>
 		<MtouchFloat32>true</MtouchFloat32>
 		<CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
 		<MtouchLink>None</MtouchLink>
@@ -188,9 +180,6 @@
 		<Reference Include="Microsoft.Azure.Mobile.Crashes.iOS.Bindings">
 			<HintPath>..\packages\Microsoft.Azure.Mobile.Crashes.0.5.0\lib\Xamarin.iOS10\Microsoft.Azure.Mobile.Crashes.iOS.Bindings.dll</HintPath>
 		</Reference>
-		<Reference Include="Newtonsoft.Json">
-			<HintPath>..\packages\Newtonsoft.Json.6.0.4\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
-		</Reference>
 		<Reference Include="Microsoft.WindowsAzure.Mobile">
 			<HintPath>..\packages\Microsoft.Azure.Mobile.Client.3.1.0\lib\Xamarin.iOS10\Microsoft.WindowsAzure.Mobile.dll</HintPath>
 		</Reference>
@@ -217,6 +206,18 @@
 		</Reference>
 		<Reference Include="Plugin.TextToSpeech">
 		  <HintPath>..\packages\Xam.Plugins.TextToSpeech.2.0.0\lib\Xamarin.iOS10\Plugin.TextToSpeech.dll</HintPath>
+		</Reference>
+		<Reference Include="Newtonsoft.Json">
+		  <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
+		</Reference>
+		<Reference Include="Plugin.AudioRecorder">
+		  <HintPath>..\packages\Plugin.AudioRecorder.1.0.0\lib\xamarinios10\Plugin.AudioRecorder.dll</HintPath>
+		</Reference>
+		<Reference Include="PCLStorage.Abstractions">
+		  <HintPath>..\packages\PCLStorage.1.0.2\lib\portable-Xamarin.iOS+Xamarin.Mac\PCLStorage.Abstractions.dll</HintPath>
+		</Reference>
+		<Reference Include="PCLStorage">
+		  <HintPath>..\packages\PCLStorage.1.0.2\lib\portable-Xamarin.iOS+Xamarin.Mac\PCLStorage.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
@@ -663,9 +664,6 @@
 		<Compile Include="ViewControllers\WeatherBotVc.designer.cs">
 			<DependentUpon>WeatherBotVc.cs</DependentUpon>
 		</Compile>
-		<Compile Include="Services\AudioRecorderService.cs" />
-		<Compile Include="Services\AudioStream.cs" />
-		<Compile Include="Services\WaveRecorder.cs" />
 	</ItemGroup>
 	<ItemGroup>
 		<BundleResource Include="Settings.bundle\Root.plist" />
