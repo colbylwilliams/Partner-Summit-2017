@@ -60,25 +60,25 @@
     <Compile Include="$(MSBuildThisFileDirectory)Settings\SettingAccessors.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Providers\TestDataProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\WeatherBot.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Args\WeatherBotRequestEventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Args\WeatherBotStateEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Clients\Authentication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Clients\BingSpeechApi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Clients\LUISApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Constants\Endpoints.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Constants\Intents.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Constants\LocationEntityConstants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Constants\TimeEntityConstants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Constants\WeatherBotMessages.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Domain\Entity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Domain\Intent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Domain\LUISResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Domain\Resolution.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Domain\RootObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Domain\SpeechResult.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Constants\LocationEntityConstants.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Constants\TimeEntityConstants.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Constants\WeatherBotMessages.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Args\WeatherBotRequestEventArgs.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Args\WeatherBotStateEventArgs.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Constants\Intents.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Enums\WeatherBotState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Extensions\EntityExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Extensions\ExceptionExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)WeatherBot\Constants\Endpoints.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Settings\" />
@@ -88,9 +88,5 @@
     <Folder Include="$(MSBuildThisFileDirectory)Domain\" />
     <Folder Include="$(MSBuildThisFileDirectory)Analytics\" />
     <Folder Include="$(MSBuildThisFileDirectory)Providers\" />
-    <Folder Include="$(MSBuildThisFileDirectory)WeatherBot\Constants\" />
-    <Folder Include="$(MSBuildThisFileDirectory)WeatherBot\Args\" />
-    <Folder Include="$(MSBuildThisFileDirectory)WeatherBot\Enums\" />
-    <Folder Include="$(MSBuildThisFileDirectory)WeatherBot\Extensions\" />
   </ItemGroup>
 </Project>

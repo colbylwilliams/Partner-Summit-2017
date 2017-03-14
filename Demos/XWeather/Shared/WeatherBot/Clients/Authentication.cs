@@ -1,8 +1,8 @@
 ﻿using System;
-using System.IO;
-using System.Net;
-using System.Text;
 using System.Diagnostics;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace XWeather.WeatherBot
 {
@@ -19,19 +19,19 @@ namespace XWeather.WeatherBot
 		}
 
 
-		public void Init ()
+		public async Task Init ()
 		{
 			if (string.IsNullOrEmpty (Token))
 			{
-				Token = HttpPost (Constants.Endpoints.AuthApi);
+				Token = await HttpPost (Constants.Endpoints.AuthApi);
 			}
 		}
 
 
-		public void RenewAccessToken ()
+		public async Task RenewAccessToken ()
 		{
 			Token = null;
-			Token = HttpPost (Constants.Endpoints.AuthApi);
+			Token = await HttpPost (Constants.Endpoints.AuthApi);
 
 			Debug.WriteLine (string.Format ("Renewed token for user: {0} is: {1}",
 											subscriptionId,
@@ -39,23 +39,21 @@ namespace XWeather.WeatherBot
 		}
 
 
-		string HttpPost (string accessUri)
+		async Task<string> HttpPost (string accessUri)
 		{
 			try
 			{
-				//Prepare auth request 
-				var webRequest = WebRequest.Create (accessUri);
-				webRequest.ContentType = "application/x-www-form-urlencoded";
-				webRequest.Method = "POST";
-				webRequest.ContentLength = 0;
-
-				webRequest.Headers.Add ("Ocp-Apim-Subscription-Key", subscriptionId);
-
-				using (WebResponse webResponse = webRequest.GetResponse ())
-				using (Stream stream = webResponse.GetResponseStream ())
+				using (var client = new HttpClient ())
 				{
-					var reader = new StreamReader (stream, Encoding.UTF8);
-					return reader.ReadToEnd ();
+					var request = new HttpRequestMessage (HttpMethod.Post, accessUri);
+					request.Content = new FormUrlEncodedContent (new KeyValuePair<string, string> [0]);
+
+					client.DefaultRequestHeaders.Add ("Ocp-Apim-Subscription-Key", subscriptionId);
+
+					var result = await client.SendAsync (request);
+					string resultContent = await result.Content.ReadAsStringAsync ();
+
+					return resultContent;
 				}
 			}
 			catch (Exception ex)

@@ -4,6 +4,8 @@
 	{
 		public string query { get; set; }
 
+		public Intent topScoringIntent { get; set; }
+
 		public Intent [] intents { get; set; }
 
 		public Entity [] entities { get; set; }

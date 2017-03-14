@@ -1,10 +1,12 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using System.Net;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Text;
+using PCLStorage;
+using System.Net.Http;
+using System.Net.Http.Headers;
 
 namespace XWeather.WeatherBot
 {
@@ -20,9 +22,8 @@ namespace XWeather.WeatherBot
 		}
 
 
-		HttpWebRequest createWebRequest (string audioFilePath)
+		async Task<HttpRequestMessage> createWebRequest (string audioFilePath)
 		{
-			string headerValue;
 			StringBuilder requestUriBuilder = new StringBuilder (Constants.Endpoints.BingSpeechApi);
 
 			requestUriBuilder.Append (@"?scenarios=smd");                               // websearch is the other main option.
@@ -34,59 +35,26 @@ namespace XWeather.WeatherBot
 			requestUriBuilder.Append (@"&instanceid=565D69FF-E928-4B7E-87DA-9A750B96D9E3");
 			requestUriBuilder.AppendFormat (@"&requestid={0}", Guid.NewGuid ());
 
-			string host = @"speech.platform.bing.com";
-			string contentType = @"audio/wav; codec=""audio/pcm""; samplerate=16000";
-
-			/*
-             * Input your own audio file or use read from a microphone stream directly.
-             */
-
-			FileStream fs = null;
-
-			/*
-			 * Create a header with the access_token property of the returned token
-			 */
-			headerValue = "Bearer " + auth.Token;
 			var requestUri = requestUriBuilder.ToString ();
 
 			Debug.WriteLine ("Request Uri: " + requestUri + Environment.NewLine);
 
-			HttpWebRequest request = null;
-			request = (HttpWebRequest)WebRequest.Create (requestUri);
-			request.SendChunked = true;
-			request.Accept = @"application/json;text/xml";
-			request.Method = "POST";
-			request.ProtocolVersion = HttpVersion.Version11;
-			request.Host = host;
-			request.ContentType = contentType;
-			request.Headers ["Authorization"] = headerValue;
-
 			try
 			{
-				using (fs = new FileStream (audioFilePath, FileMode.Open, FileAccess.Read))
-				{
-					/*
-					 * Open a request stream and write 1024 byte chunks in the stream one at a time.
-					 */
-					byte [] buffer = null;
-					int bytesRead = 0;
+				var request = new HttpRequestMessage (HttpMethod.Post, requestUri);
 
-					using (Stream requestStream = request.GetRequestStream ())
-					{
-						/*
-						 * Read 1024 raw bytes from the input audio file.
-						 */
-						buffer = new byte [checked((uint)Math.Min (1024, (int)fs.Length))];
+				request.Headers.TransferEncodingChunked = true;
+				request.Headers.Authorization = new AuthenticationHeaderValue ("Bearer", auth.Token);
+				request.Headers.Accept.ParseAdd ("application/json");
+				request.Headers.Accept.ParseAdd ("text/xml");
 
-						while ((bytesRead = fs.Read (buffer, 0, buffer.Length)) != 0)
-						{
-							requestStream.Write (buffer, 0, bytesRead);
-						}
+				var root = FileSystem.Current.LocalStorage;
+				var file = await root.GetFileAsync (audioFilePath);
+				var stream = await file.OpenAsync (FileAccess.Read);
+				// we'll dispose the StreamContent later after it's sent
 
-						// Flush
-						requestStream.Flush ();
-					}
-				}
+				request.Content = new StreamContent (stream);
+				request.Content.Headers.ContentType = new MediaTypeHeaderValue ("audio/wav");
 
 				return request;
 			}
@@ -98,20 +66,22 @@ namespace XWeather.WeatherBot
 		}
 
 
-		WebResponse sendRequest (Func<HttpWebRequest> requestFactory)
+		async Task<string> sendRequest (HttpRequestMessage request)
 		{
 			try
 			{
-				var request = requestFactory ();
-				var response = request.GetResponse ();
-
-				//if we get a valid response (non-null & no exception), then reset our retry count
-				if (response != null)
+				using (var client = new HttpClient ())
 				{
-					retryCount = 0;
-					Debug.WriteLine (((HttpWebResponse)response).StatusCode);
+					var response = await client.SendAsync (request);
 
-					return response;
+					//if we get a valid response (non-null & no exception), then reset our retry count & return the response
+					if (response != null)
+					{
+						retryCount = 0;
+						Debug.WriteLine ($"sendRequest returned ${response.StatusCode}");
+
+						return await response.Content.ReadAsStringAsync ();
+					}
 				}
 			}
 			catch (Exception ex)
@@ -121,20 +91,19 @@ namespace XWeather.WeatherBot
 				//handle expired auth token
 				if (ex.CheckWebResponseStatus (HttpStatusCode.Forbidden) && retryCount < 1)
 				{
-					auth.RenewAccessToken ();
+					await auth.RenewAccessToken ();
 					retryCount++;
 
-					return sendRequest (requestFactory);
+					return await sendRequest (request);
 				}
+			}
+			finally
+			{
+				//release the underlying file stream
+				request.Content?.Dispose ();
 			}
 
 			return null;
-		}
-
-
-		public async Task<SpeechResult> SpeechToTextAsync (string audioFilePath)
-		{
-			return await Task.Run (() => SpeechToText (audioFilePath));
 		}
 
 
@@ -143,7 +112,7 @@ namespace XWeather.WeatherBot
 		Random rnd = new Random ();
 		static int testIndex = 0;
 
-		public SpeechResult SpeechToText (string audioFilePath)
+		public async Task<SpeechResult> SpeechToText (string audioFilePath)
 		{
 			//var testIndex = rnd.Next (0, 9);
 
@@ -168,26 +137,16 @@ namespace XWeather.WeatherBot
 #else
 
 
-		public SpeechResult SpeechToText (string audioFilePath)
+		public async Task<SpeechResult> SpeechToText (string audioFilePath)
 		{
-			auth.Init ();
+			await auth.Init ();
 
 			try
 			{
-				string responseString;
+				var request = await createWebRequest (audioFilePath);
+				var response = await sendRequest (request);
 
-				/*
-				 * Get the response from the service.
-				 */
-				using (var response = sendRequest (() => createWebRequest (audioFilePath)))
-				using (StreamReader sr = new StreamReader (response.GetResponseStream ()))
-				{
-					responseString = sr.ReadToEnd ();
-				}
-
-				//Console.WriteLine (responseString);
-
-				var root = JsonConvert.DeserializeObject<RootObject> (responseString);
+				var root = JsonConvert.DeserializeObject<RootObject> (response);
 				var result = root.results? [0];
 
 				//write some test/offline data

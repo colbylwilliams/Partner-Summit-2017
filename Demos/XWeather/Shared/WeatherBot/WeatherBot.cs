@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Linq;
+using Plugin.AudioRecorder;
 using Plugin.TextToSpeech;
 
 namespace XWeather.WeatherBot
 {
+	public interface IAudioRecorderService
+	{
+		void ListenForCommand ();
+	}
+
 	public class WeatherBot// : IDisposable
 	{
 		const string CortanaAppId = "c413b2ef-382c-45bd-8ff0-f76d60e2a821";
@@ -66,70 +72,80 @@ namespace XWeather.WeatherBot
 
 		async void Recorder_AudioRecorded (object sender, string audioFilePath)
 		{
-			//see if we have a valid audio file - this will return null in the case only silence was recorded
-			if (audioFilePath != null)
+			try
 			{
-				StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Working, Constants.Messages.ParsingFeedbackMsg));
-
-				SpeechResult speechToTextResult = null;
-
-				try
+				//see if we have a valid audio file - this will return null in the case only silence was recorded
+				if (audioFilePath != null)
 				{
-					speechToTextResult = await speechApi.SpeechToTextAsync (audioFilePath);
-				}
-				catch (Exception ex)
-				{
-					System.Diagnostics.Debug.WriteLine ("Error talking to Bing Speech API: {0}", ex.Message);
-				}
+					StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Working, Constants.Messages.ParsingFeedbackMsg));
 
-				if (!string.IsNullOrEmpty (speechToTextResult?.Name) && speechToTextResult.Confidence > SpeechConfidenceThreshold)
-				{
-					StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Working, speechToTextResult?.Name));
+					SpeechResult speechToTextResult = null;
 
 					try
 					{
-						var luisResult = await luis.GetResultForQuery (speechToTextResult.Name);
-
-						if (luisResult?.intents != null)
-						{
-							processIntent (luisResult);
-							return;
-						}
+						speechToTextResult = await speechApi.SpeechToText (audioFilePath);
 					}
 					catch (Exception ex)
 					{
-						System.Diagnostics.Debug.WriteLine ("Error talking to LUIS: {0}", ex.Message);
+						System.Diagnostics.Debug.WriteLine ("Error talking to Bing Speech API: {0}", ex.Message);
+						throw;
+					}
+
+					if (!string.IsNullOrEmpty (speechToTextResult?.Name) && speechToTextResult.Confidence > SpeechConfidenceThreshold)
+					{
+						StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Working, speechToTextResult?.Name));
+
+						try
+						{
+							var luisResult = await luis.GetResultForQuery (speechToTextResult.Name);
+
+							processIntent (luisResult);
+						}
+						catch (Exception ex)
+						{
+							System.Diagnostics.Debug.WriteLine ("Error talking to LUIS: {0}", ex.Message);
+							throw;
+						}
 					}
 				}
 			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine ("Error in Recorder_AudioRecorded: {0}", ex.Message);
 
-			//if we make it here we've failed :(
-			StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Failure, Constants.Messages.NotUnderstoodResponse));
+				//if we make it here we've failed :(
+				StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Failure, Constants.Messages.NotUnderstoodResponse));
+			}
 		}
 
 
-		Intent findBestIntent (Intent [] intents)
+		Intent findBestIntent (LUISResult result)
 		{
-			if (intents.Length == 0)
+			if (result?.topScoringIntent != null)
+			{
+				return result.topScoringIntent;
+			}
+
+			if (result?.intents?.Length == 0)
 			{
 				return null;
 			}
 
-			if (intents.Length > 1)
+			if (result.intents.Length > 1)
 			{
-				if (intents.Any (e => e.score > 0))
+				if (result.intents.Any (e => e.score > 0))
 				{
-					return intents.OrderByDescending (i => i.score).FirstOrDefault ();
+					return result.intents.OrderByDescending (i => i.score).FirstOrDefault ();
 				}
 			}
 
-			return intents [0];
+			return result?.intents [0];
 		}
 
 
 		void processIntent (LUISResult result)
 		{
-			var intent = findBestIntent (result.intents);
+			var intent = findBestIntent (result);
 
 			switch (intent?.intent)
 			{
@@ -179,6 +195,8 @@ namespace XWeather.WeatherBot
 
 
 		void processWeatherRequest (Entity locationEntity, Entity timeEntity)
+
+
 		{
 			string response = null;
 
@@ -229,7 +247,7 @@ namespace XWeather.WeatherBot
 						//if the entity itself is a DateTime, we'll need to change the messaging a bit to use that date (e.g. they asked "on January 25, 2016")
 						if (DateTime.TryParse (timeEntity.entity, out date))
 						{
-							var dateResponse = date.ToLongDateString ();
+							var dateResponse = date.ToString ("d");//.ToLongDateString ();
 							response = string.Format (Constants.Messages.CheckFutureWeatherForecastResponseTemplate, locationEntity.entity, dateResponse);
 
 							processSuccessfulRequest (response, locationEntity, date);
