@@ -203,6 +203,10 @@
     <Reference Include="Plugin.CurrentActivity">
       <HintPath>..\packages\Plugin.CurrentActivity.1.0.1\lib\MonoAndroid10\Plugin.CurrentActivity.dll</HintPath>
     </Reference>
+    <Reference Include="Plugin.AudioRecorder">
+      <HintPath>..\packages\Plugin.AudioRecorder.1.0.0\lib\monoandroid71\Plugin.AudioRecorder.dll</HintPath>
+    </Reference>
+    <Reference Include="Java.Interop" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Resources\Resource.designer.cs" />
@@ -253,7 +257,8 @@
     <Compile Include="Widgets\ScrollAwareFABBehavior.cs" />
     <Compile Include="View\DailyGraphView.cs" />
     <Compile Include="Extensions\PathExtensions.cs" />
-    <Compile Include="Services\AudioRecorderService.cs" />
+    <Compile Include="Extensions\ViewExtensions.cs" />
+    <Compile Include="Extensions\ActivityExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
@@ -340,6 +345,11 @@
     <AndroidResource Include="Resources\drawable\i_search.xml" />
     <AndroidResource Include="Resources\drawable\i_list.xml" />
     <AndroidResource Include="Resources\drawable\logo_wunderground_white.xml" />
+    <AndroidResource Include="Resources\drawable\i_mic.xml" />
+    <AndroidResource Include="Resources\anim\fab_open.xml" />
+    <AndroidResource Include="Resources\anim\fab_close.xml" />
+    <AndroidResource Include="Resources\anim\fab_rotate_open.xml" />
+    <AndroidResource Include="Resources\anim\fab_rotate_close.xml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Settings\" />
@@ -357,6 +367,7 @@
     <Folder Include="Adapters\Base\" />
     <Folder Include="Widgets\" />
     <Folder Include="View\" />
+    <Folder Include="Resources\anim\" />
   </ItemGroup>
   <ItemGroup>
     <AndroidAsset Include="Assets\Atlanta.json" />
