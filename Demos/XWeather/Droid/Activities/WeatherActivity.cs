@@ -19,6 +19,9 @@ using XWeather.Domain;
 using XWeather.Shared;
 using System.Collections.Generic;
 using System.Linq;
+using XWeather.Constants;
+using XWeather.WeatherBot;
+using Android.Content;
 
 namespace XWeather.Droid
 {
@@ -45,6 +48,9 @@ namespace XWeather.Droid
 		}
 
 		WeatherPagerAdapter pagerAdapter;
+		WeatherBot.WeatherBot weatherBot;
+		AlertDialog currentDialog;
+		WuLocation location;
 
 
 		protected override void OnCreate (Bundle savedInstanceState)
@@ -56,18 +62,22 @@ namespace XWeather.Droid
 			SetContentView (Resource.Layout.WeatherActivity);
 
 			animations = this.LoadAnimations (Resource.Animation.fab_rotate_open,
-			                                  Resource.Animation.fab_rotate_close, 
-			                                  Resource.Animation.fab_open, 
-			                                  Resource.Animation.fab_close);
+											  Resource.Animation.fab_rotate_close,
+											  Resource.Animation.fab_open,
+											  Resource.Animation.fab_close);
 
 			var coordLayout = FindViewById (Resource.Id.coordinatorLayout);
-			floatingButtons = coordLayout.FindSubViewsOfType <FloatingActionButton> ();
+			floatingButtons = coordLayout.FindSubViewsOfType<FloatingActionButton> ();
 			floatingButtons.Reverse ();
 			floatingButtons.ForAll (v => v.SetOnClickListener (this));
 
 			setupViewPager ();
 
 			getData ();
+
+			weatherBot = new WeatherBot.WeatherBot (PrivateKeys.CognitiveServices.BingSpeech, PrivateKeys.CognitiveServices.Luis);
+			weatherBot.WeatherRequestUnderstood += WeatherBot_WeatherRequestUnderstood;
+			weatherBot.StateChanged += WeatherBot_StateChanged;
 
 			//AnalyticsManager.Shared.RegisterForHockeyAppUpdates (this);
 		}
@@ -97,43 +107,61 @@ namespace XWeather.Droid
 		}
 
 
+		protected override void OnDestroy ()
+		{
+			weatherBot.WeatherRequestUnderstood -= WeatherBot_WeatherRequestUnderstood;
+			weatherBot.StateChanged -= WeatherBot_StateChanged;
+
+			base.OnDestroy ();
+		}
+
+
+		void fabExpand (bool expand)
+		{
+			if (fabExpanded != expand)
+			{
+				int openCloseAnimation = expand ? Resource.Animation.fab_rotate_open : Resource.Animation.fab_rotate_close;
+				int buttonAnimation = expand ? Resource.Animation.fab_open : Resource.Animation.fab_close;
+
+				floatingButtons.First ().StartAnimation (animations [openCloseAnimation]);
+
+				floatingButtons.Skip (1).ForAll (fab =>
+				 {
+					 fab.StartAnimation (animations [buttonAnimation]);
+					 fab.Visibility = expand ? ViewStates.Visible : ViewStates.Invisible;
+					 fab.Clickable = expand;
+				 });
+
+				fabExpanded = expand;
+			}
+		}
+
+
 		public void OnClick (View v)
 		{
+			//OnClick listener for Floating Action Buttons (FABs)
 			switch ((FabActions)floatingButtons.IndexOf ((FloatingActionButton)v))
 			{
 				case FabActions.Main:
-					if (fabExpanded)
-					{
-						floatingButtons.First ().StartAnimation (animations [Resource.Animation.fab_rotate_close]);
 
-						floatingButtons.Skip (1).ForAll (fab =>
-						 {
-							 fab.StartAnimation (animations [Resource.Animation.fab_close]);
-							 fab.Clickable = false;
-							 fab.Visibility = ViewStates.Invisible;
-						 });
+					fabExpand (!fabExpanded);
 
-						fabExpanded = false;
-					}
-					else
-					{
-						floatingButtons.First ().StartAnimation (animations [Resource.Animation.fab_rotate_open]);
-
-						floatingButtons.Skip (1).ForAll (fab =>
-						 {
-							 fab.StartAnimation (animations [Resource.Animation.fab_open]);
-							 fab.Visibility = ViewStates.Visible;
-							 fab.Clickable = true;
-						 });
-
-						fabExpanded = true;
-					}
 					break;
 				case FabActions.Settings:
+
+					fabExpand (false);
 					StartActivity (typeof (LocationsActivity));
+
 					break;
 				case FabActions.WeatherBot:
-					//do weatherbot UI here
+
+					fabExpand (false);
+
+					if (weatherBot.CognitiveServicesEnabled)
+					{
+						weatherBot.ListenForCommand ();
+					}
+
 					break;
 			}
 		}
@@ -185,7 +213,7 @@ namespace XWeather.Droid
 
 				Settings.WeatherPage = e.Position;
 
-				floatingButtons.First().Show ();
+				floatingButtons.First ().Show ();
 
 				updateBackground ();
 			};
@@ -214,11 +242,11 @@ namespace XWeather.Droid
 
 		void updateBackground ()
 		{
-			var location = WuClient.Shared.Selected;
+			var selectedLocation = WuClient.Shared.Selected;
 
-			var random = location == null || Settings.RandomBackgrounds;
+			var random = selectedLocation == null || Settings.RandomBackgrounds;
 
-			var gradients = location.GetTimeOfDayGradient (random);
+			var gradients = selectedLocation.GetTimeOfDayGradient (random);
 
 			using (var gd = new GradientDrawable (GradientDrawable.Orientation.TopBottom, gradients.Item1.ToArray ()))
 			{
@@ -326,5 +354,150 @@ namespace XWeather.Droid
 			});
 		}
 #endif
+
+
+		async void WeatherBot_WeatherRequestUnderstood (object sender, WeatherBotRequestEventArgs e)
+		{
+			await getLocationForecast (e.Location.entity, e.RequestDateTime, e.UseCurrentLocation);
+		}
+
+
+		// "entity": "Fort Thomas, KY"
+		// "entity": "Fort Thomas Kentucky"
+		// "entity": "Paris, France"
+		async Task getLocationForecast (string entity, DateTime? date = null, bool useCurrentLocation = false)
+		{
+			if (useCurrentLocation)
+			{
+				location = WuClient.Shared.Selected;
+			}
+			else
+			{
+				// this gets the location without adding it to the saved locations
+				location = await WuClient.Shared.SearchLocation (entity);
+			}
+
+			var forecastString = location?.ForecastString (Settings.UomTemperature, date);
+
+			RunOnUiThread (() =>
+			{
+				if (string.IsNullOrEmpty (forecastString))
+				{
+					updateViewState (WeatherBotState.Failure, $"Unable to find weather forecast for {entity}");
+					weatherBot.Speak ($"Unable to find weather forecast for {entity}", true);
+				}
+				else
+				{
+					System.Diagnostics.Debug.WriteLine ($"{forecastString}");
+
+					updateViewState (WeatherBotState.Success, $"Would you like to add {location.Name} to your saved locations?");
+
+					weatherBot.Speak (forecastString, true);
+				}
+			});
+		}
+
+
+		void WeatherBot_StateChanged (object sender, WeatherBotStateEventArgs e)
+		{
+			RunOnUiThread (() =>
+			{
+				updateViewState (e.State, e.Message);
+			});
+		}
+
+
+		void updateViewState (WeatherBotState state, string feedbackMsg = null)
+		{
+			System.Diagnostics.Debug.WriteLine ($"{state}");
+
+			switch (state)
+			{
+				case WeatherBotState.Listening:
+				case WeatherBotState.Working:
+
+					if (!(currentDialog is ProgressDialog))
+					{
+						currentDialog = new ProgressDialog (this);
+						currentDialog.SetCancelable (true);
+						currentDialog.SetButton ((int)DialogButtonType.Negative, "Cancel", (sender, e) => currentDialog.Dismiss ());
+						currentDialog.DismissEvent += (sender, e) => weatherBot.Cancel ();
+					}
+
+					break;
+				case WeatherBotState.Success:
+				case WeatherBotState.Failure:
+
+					currentDialog.Dismiss ();
+
+					using (var ab = new AlertDialog.Builder (this))
+					{
+						ab.SetTitle ($"{state.ToString ()}...")
+						  .SetMessage (feedbackMsg)
+						  .SetCancelable (true)
+						  .SetNegativeButton ("Cancel", (sender, e) => currentDialog.Dismiss ());
+
+						currentDialog = ab.Create ();
+					}
+
+					break;
+			}
+
+			currentDialog.SetTitle ($"{state.ToString ()}...");
+			currentDialog.SetMessage (feedbackMsg);
+			setBotStateIcon (state);
+			setNeutralButtonForState (state);
+
+			if (!currentDialog.IsShowing)
+			{
+				currentDialog.Show ();
+			}
+		}
+
+
+		void setBotStateIcon (WeatherBotState state)
+		{
+			switch (state)
+			{
+				case WeatherBotState.Success:
+					currentDialog.SetIcon (Resource.Drawable.i_check);
+					break;
+				case WeatherBotState.Failure:
+					currentDialog.SetIcon (Resource.Drawable.i_error);
+					break;
+			}
+		}
+
+
+		void setNeutralButtonForState (WeatherBotState state)
+		{
+			switch (state)
+			{
+				case WeatherBotState.Success:
+
+					currentDialog.SetButton ((int)DialogButtonType.Neutral, "Add Location", (sender, e) =>
+					{
+						if (location != null)
+						{
+							WuClient.Shared.AddLocation (location);
+						}
+
+						currentDialog.Dismiss ();
+					});
+
+					break;
+				case WeatherBotState.Failure:
+
+					currentDialog.SetButton ((int)DialogButtonType.Neutral, "Try Again", (sender, e) =>
+					{
+						//restart at the "listening..." state
+						currentDialog.Dismiss ();
+						currentDialog = null;
+						weatherBot.ListenForCommand ();
+					});
+
+					break;
+			}
+		}
 	}
 }

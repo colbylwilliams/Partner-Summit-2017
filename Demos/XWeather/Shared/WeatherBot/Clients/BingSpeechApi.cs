@@ -146,8 +146,18 @@ namespace XWeather.WeatherBot
 				var request = await createWebRequest (audioFilePath);
 				var response = await sendRequest (request);
 
-				var root = JsonConvert.DeserializeObject<RootObject> (response);
-				var result = root.results? [0];
+				try
+				{
+					var root = JsonConvert.DeserializeObject<RootObject> (response);
+					var result = root.results? [0];
+
+					return result;
+				}
+				catch (Exception e)
+				{
+					//looking for a specific e here...
+					Debug.WriteLine (e.Message);
+				}
 
 				//write some test/offline data
 				//for (var testResponseIndex = 0; testResponseIndex < 10; testResponseIndex++)
@@ -162,7 +172,7 @@ namespace XWeather.WeatherBot
 				//	}
 				//}
 
-				return result;
+				return null;
 			}
 			catch (Exception ex)
 			{

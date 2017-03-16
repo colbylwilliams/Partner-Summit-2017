@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Plugin.AudioRecorder;
 using Plugin.TextToSpeech;
+using XWeather.Constants;
 
 namespace XWeather.WeatherBot
 {
@@ -22,6 +24,8 @@ namespace XWeather.WeatherBot
 		public event EventHandler<WeatherBotStateEventArgs> StateChanged;
 		public event EventHandler<WeatherBotRequestEventArgs> WeatherRequestUnderstood;
 
+		public bool CognitiveServicesEnabled => !string.IsNullOrEmpty (PrivateKeys.CognitiveServices.BingSpeech) && !string.IsNullOrEmpty (PrivateKeys.CognitiveServices.Luis);
+
 		int failureCount;
 		const int failureThreshold = 3;
 
@@ -31,8 +35,6 @@ namespace XWeather.WeatherBot
 			recorder = new AudioRecorderService ();
 			luis = new LUISApi (CortanaAppId, LuisSubscriptionKey);
 			speechApi = new BingSpeechApi (BingSpeechApiKey);
-
-			recorder.AudioInputReceived += Recorder_AudioRecorded;
 		}
 
 
@@ -43,6 +45,7 @@ namespace XWeather.WeatherBot
 		//	recorder = null;
 		//	luis = null;
 		//	speechApi = null;
+		//	CrossTextToSpeech.Current.Dispose();
 		//}
 
 
@@ -51,12 +54,22 @@ namespace XWeather.WeatherBot
 		/// </summary>
 		public void ListenForCommand ()
 		{
-			StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Listening));
+			StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Listening, Constants.Messages.ListeningMsg));
 
 			recorder.AudioInputReceived -= Recorder_AudioRecorded;
 			recorder.AudioInputReceived += Recorder_AudioRecorded;
 
-			recorder.StartRecording ();
+			Task.Run (() => recorder.StartRecording ())
+				.ContinueWith (t =>
+			 {
+				 //did we fail to get Started?
+				 recorder.StopRecording (false);
+
+				 System.Diagnostics.Debug.WriteLine ("Error during recorder.StartRecording (): {0}", t.Exception.GetBaseException ());
+
+				 processErrorResponse (Constants.Messages.ErrorResponse, false);
+
+			 }, TaskContinuationOptions.OnlyOnFaulted);
 		}
 
 
@@ -65,7 +78,7 @@ namespace XWeather.WeatherBot
 			if (recorder != null)
 			{
 				recorder.AudioInputReceived -= Recorder_AudioRecorded;
-				recorder.StopRecording ();
+				recorder.StopRecording (false);
 			}
 		}
 
@@ -107,6 +120,10 @@ namespace XWeather.WeatherBot
 							throw;
 						}
 					}
+					else
+					{
+						throw new Exception ("speechToTextResult was null in Recorder_AudioRecorded");
+					}
 				}
 			}
 			catch (Exception ex)
@@ -114,7 +131,7 @@ namespace XWeather.WeatherBot
 				System.Diagnostics.Debug.WriteLine ("Error in Recorder_AudioRecorded: {0}", ex.Message);
 
 				//if we make it here we've failed :(
-				StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Failure, Constants.Messages.NotUnderstoodResponse));
+				processErrorResponse (Constants.Messages.NotUnderstoodResponse, false);
 			}
 		}
 
@@ -195,8 +212,6 @@ namespace XWeather.WeatherBot
 
 
 		void processWeatherRequest (Entity locationEntity, Entity timeEntity)
-
-
 		{
 			string response = null;
 
@@ -298,7 +313,7 @@ namespace XWeather.WeatherBot
 			var entity = result.entities.FindBestEntityByScore ();
 			var response = failureCount < failureThreshold ? Constants.Messages.NotUnderstoodResponse : Constants.Messages.IrritatedResponseTemplate;
 
-			if (failureCount < 3)
+			if (failureCount < failureThreshold)
 			{
 				if (entity != null)
 				{
@@ -311,11 +326,14 @@ namespace XWeather.WeatherBot
 		}
 
 
-		void processErrorResponse (string responseMsg)
+		void processErrorResponse (string responseMsg, bool speak = true)
 		{
 			StateChanged?.Invoke (this, new WeatherBotStateEventArgs (WeatherBotState.Failure, responseMsg));
 
-			Speak (responseMsg);
+			if (speak)
+			{
+				Speak (responseMsg);
+			}
 		}
 
 

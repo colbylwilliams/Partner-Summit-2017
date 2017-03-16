@@ -20,9 +20,6 @@ namespace XWeather.iOS
 		WeatherBot.WeatherBot weatherBot;
 		WeatherBotState currentState;
 
-		bool CognitiveServicesEnabled => !string.IsNullOrEmpty (PrivateKeys.CognitiveServices.BingSpeech) && !string.IsNullOrEmpty (PrivateKeys.CognitiveServices.Luis);
-
-
 		public WeatherBotVc (IntPtr handle) : base (handle) { }
 
 
@@ -44,10 +41,8 @@ namespace XWeather.iOS
 
 			System.Diagnostics.Debug.WriteLine ($"{PresentingViewController?.DefinesPresentationContext}");
 
-			if (CognitiveServicesEnabled)
+			if (weatherBot.CognitiveServicesEnabled)
 			{
-				updateViewState (WeatherBotState.Listening);
-
 				weatherBot.StateChanged += WeatherBot_StateChanged;
 				weatherBot.WeatherRequestUnderstood += WeatherBot_WeatherRequestUnderstood;
 
@@ -122,7 +117,7 @@ namespace XWeather.iOS
 
 		partial void tryAgainButtonClicked (NSObject sender)
 		{
-			if (CognitiveServicesEnabled)
+			if (weatherBot.CognitiveServicesEnabled)
 			{
 				weatherBot.Cancel ();
 
@@ -194,6 +189,9 @@ namespace XWeather.iOS
 		{
 			switch (currentState)
 			{
+				case WeatherBotState.Listening:
+					listeningFeedbackLabel.Text = feedback;
+					break;
 				case WeatherBotState.Working:
 					workingFeedbackLabel.Text = feedback;
 					break;

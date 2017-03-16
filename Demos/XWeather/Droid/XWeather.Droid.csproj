@@ -203,10 +203,16 @@
     <Reference Include="Plugin.CurrentActivity">
       <HintPath>..\packages\Plugin.CurrentActivity.1.0.1\lib\MonoAndroid10\Plugin.CurrentActivity.dll</HintPath>
     </Reference>
+    <Reference Include="Java.Interop" />
+    <Reference Include="PCLStorage.Abstractions">
+      <HintPath>..\packages\PCLStorage.1.0.2\lib\monoandroid\PCLStorage.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="PCLStorage">
+      <HintPath>..\packages\PCLStorage.1.0.2\lib\monoandroid\PCLStorage.dll</HintPath>
+    </Reference>
     <Reference Include="Plugin.AudioRecorder">
       <HintPath>..\packages\Plugin.AudioRecorder.1.0.0\lib\monoandroid71\Plugin.AudioRecorder.dll</HintPath>
     </Reference>
-    <Reference Include="Java.Interop" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Resources\Resource.designer.cs" />
@@ -350,6 +356,8 @@
     <AndroidResource Include="Resources\anim\fab_close.xml" />
     <AndroidResource Include="Resources\anim\fab_rotate_open.xml" />
     <AndroidResource Include="Resources\anim\fab_rotate_close.xml" />
+    <AndroidResource Include="Resources\drawable\i_check.xml" />
+    <AndroidResource Include="Resources\drawable\i_error.xml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Settings\" />
